@@ -21,7 +21,7 @@ let savedSpeed = localStorage.getItem("videoPlayerSpeed") || 1;
 let savedSpeedIndex = speedLevels.indexOf(parseFloat(savedSpeed));
 let currentSpeedIndex = savedSpeedIndex !== -1 ? savedSpeedIndex : 3;
 let isFullscreen = false;
-let currentVideo = null;
+let currentVideoTitle = null;
 
 // Initialize video player with saved settings
 videoPlayer.volume = savedVolume;
@@ -43,8 +43,8 @@ videoContainer.addEventListener("click", (e) => {
 });
 
 // Load saved time and apply saved speed when loading new video
-function loadSavedTime(videoFile) {
-  const savedTime = localStorage.getItem(`videoTime-${videoFile.name}`);
+function loadSavedTime(videoTitle) {
+  const savedTime = localStorage.getItem(`videoTime-${videoTitle}`);
   if (savedTime) {
     videoPlayer.currentTime = parseFloat(savedTime);
   }
@@ -53,10 +53,10 @@ function loadSavedTime(videoFile) {
 }
 
 // Save current time periodically
-function saveCurrentTime(videoFile) {
-  if (videoFile && videoPlayer.currentTime > 0) {
+function saveCurrentTime(videoTitle) {
+  if (videoTitle && videoPlayer.currentTime > 0) {
     localStorage.setItem(
-      `videoTime-${videoFile.name}`,
+      `videoTime-${videoTitle}`,
       videoPlayer.currentTime.toString()
     );
   }
@@ -117,6 +117,25 @@ function updateVolumeIcon(volume) {
   }
 }
 
+document.addEventListener("paste", (event) => {
+  const clipboardData = event.clipboardData || window.clipboardData;
+  const pastedText = clipboardData.getData("text");
+
+  if (
+    pastedText.startsWith("http") &&
+    (pastedText.includes(".mp4") ||
+      pastedText.includes(".webm") ||
+      pastedText.includes(".ogg"))
+  ) {
+    videoPlayer.src = pastedText;
+    videoTitle.textContent = pastedText;
+    currentVideoTitle = pastedText;
+    loadSavedTime(currentVideoTitle);
+    videoPlayer.play();
+    showNotification("Playing pasted video URL");
+  }
+});
+
 // Event Listeners
 fileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
@@ -124,8 +143,8 @@ fileInput.addEventListener("change", (e) => {
     const videoUrl = URL.createObjectURL(file);
     videoPlayer.src = videoUrl;
     videoTitle.textContent = file.name;
-    currentVideo = file;
-    loadSavedTime(file);
+    currentVideoTitle = file.name;
+    loadSavedTime(currentVideoTitle);
     videoPlayer.play();
   }
 });
@@ -137,8 +156,8 @@ videoPlayer.addEventListener("loadeddata", () => {
 
 // Save time periodically
 setInterval(() => {
-  if (currentVideo) {
-    saveCurrentTime(currentVideo);
+  if (currentVideoTitle) {
+    saveCurrentTime(currentVideoTitle);
   }
 }, 5000);
 
