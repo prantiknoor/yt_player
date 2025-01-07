@@ -175,6 +175,7 @@ progressArea.addEventListener("click", (e) => {
   const bounds = progressArea.getBoundingClientRect();
   const x = e.clientX - bounds.left;
   const percentage = x / bounds.width;
+  progress.style.width = `${percentage * 100}%`;
   videoPlayer.currentTime = percentage * videoPlayer.duration;
 });
 

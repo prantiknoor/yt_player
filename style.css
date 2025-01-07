@@ -65,7 +65,7 @@ body {
   }
   75% {
     box-shadow: -12px -12px 50px rgba(38, 104, 76, 0.25);
-  } 
+  }
   100% {
     box-shadow: 12px 12px 50px rgba(38, 104, 76, 0.25);
   }
@@ -135,7 +135,7 @@ body {
   height: 100%;
   background: #ff0000;
   position: relative;
-  transition: width 0.1s ease;
+  transition: width 0.05s ease;
 }
 
 .buttons {
