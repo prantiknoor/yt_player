@@ -29,11 +29,17 @@ volumeSlider.value = savedVolume * 100;
 videoPlayer.playbackRate = parseFloat(savedSpeed);
 speedBtn.textContent = `${savedSpeed}x`;
 
+videoPlayer.addEventListener("dblclick", (e) => {
+  e.stopPropagation(); // Prevent event bubbling
+  toggleFullscreen();
+});
+
 // Handle file selection and video click for play/pause
 videoContainer.addEventListener("click", (e) => {
   if (!videoPlayer.src) {
     fileInput.click();
   } else if (e.target === videoPlayer) {
+    e.stopPropagation(); // Prevent event bubbling
     if (videoPlayer.paused) {
       videoPlayer.play();
     } else {
@@ -63,10 +69,13 @@ function saveCurrentTime(videoTitle) {
 }
 
 // Show notification
+let notificationTimer;
+
 function showNotification(message) {
   notification.textContent = message;
   notification.classList.add("show");
-  setTimeout(() => {
+  clearTimeout(notificationTimer);
+  notificationTimer = setTimeout(() => {
     notification.classList.remove("show");
   }, 1500);
 }
@@ -308,3 +317,57 @@ videoPlayer.addEventListener("pause", () => {
 
 // Initialize volume icon
 updateVolumeIcon(videoPlayer.volume);
+
+let cursorTimeout;
+videoContainer.addEventListener("mousemove", () => {
+  videoContainer.style.cursor = "default";
+  clearTimeout(cursorTimeout);
+
+  if (!videoPlayer.paused) {
+    cursorTimeout = setTimeout(() => {
+      videoContainer.style.cursor = "none";
+    }, 3000);
+  }
+});
+
+// Create time preview tooltip
+const timeTooltip = document.createElement("div");
+timeTooltip.className = "time-tooltip";
+progressArea.appendChild(timeTooltip);
+
+// Update progressArea event listeners for preview and drag functionality
+progressArea.addEventListener("mousemove", (e) => {
+  const bounds = progressArea.getBoundingClientRect();
+  const x = e.clientX - bounds.left;
+  const percentage = x / bounds.width;
+  const previewTime = percentage * videoPlayer.duration;
+
+  timeTooltip.textContent = formatTime(previewTime);
+  timeTooltip.style.left = `${x}px`;
+  timeTooltip.style.display = "block";
+});
+
+progressArea.addEventListener("mouseleave", () => {
+  timeTooltip.style.display = "none";
+});
+
+// Add drag functionality
+let isDragging = false;
+
+progressArea.addEventListener("mousedown", () => {
+  isDragging = true;
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (isDragging) {
+    const bounds = progressArea.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - bounds.left, bounds.width));
+    const percentage = x / bounds.width;
+    progress.style.width = `${percentage * 100}%`;
+    videoPlayer.currentTime = percentage * videoPlayer.duration;
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+});
